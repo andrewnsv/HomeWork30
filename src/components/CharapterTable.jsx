@@ -37,32 +37,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const HeroTable = () => {
-  const [page, setPage] = React.useState(0);
+const HeroTableBody = ({ isLoading, listOfСharacter, rowsPerPage }) => {
   const [selectedHero, setSelectedHero] = React.useState(null);
   const [open, setOpen] = React.useState(false);
-
-  const rowsPerPage = 20;
-
-  const dispatch = useDispatch();
-  const { listOfСharacter, infoPage, status } = useSelector(
-    (state) => state.heroes
-  );
-
-  React.useEffect(() => {
-    const offset = page * rowsPerPage;
-    const timer = setTimeout(() => {
-      dispatch(fetchHeroes(offset / rowsPerPage + 1));
-    }, 1000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [dispatch, page]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
 
   const openModal = (id) => {
     const hero = listOfСharacter.find((hero) => hero.id === id);
@@ -70,32 +47,88 @@ const HeroTable = () => {
     setOpen(true);
   };
 
-  const SkeletonTableRow = () => {
+  const SkeletonTableRow = () => (
+    <StyledTableRow>
+      <StyledTableCell style={{ width: "24px" }} align="center">
+        <Skeleton />
+      </StyledTableCell>
+      <StyledTableCell align="left">
+        <Skeleton />
+      </StyledTableCell>
+      <StyledTableCell style={{ width: "75px" }} align="center">
+        <Skeleton />
+      </StyledTableCell>
+    </StyledTableRow>
+  );
+
+  if (isLoading) {
     return (
-      <StyledTableRow>
-        <StyledTableCell style={{ width: "24px" }} align="center">
-          <Skeleton />
-        </StyledTableCell>
-        <StyledTableCell align="left">
-          <Skeleton />
-        </StyledTableCell>
-        <StyledTableCell style={{ width: "75px" }} align="center">
-          <Skeleton />
-        </StyledTableCell>
-      </StyledTableRow>
+      <TableBody>
+        {[...Array(rowsPerPage)].map((_, index) => (
+          <SkeletonTableRow key={index} />
+        ))}
+      </TableBody>
     );
-  };
+  }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "column",
-      }}
-    >
-      {status === "loading" || listOfСharacter.length === 0 ? (
+    <>
+      <TableBody>
+        {listOfСharacter.map((row, index) => (
+          <StyledTableRow
+            sx={{
+              "&:hover": {
+                backgroundColor: "lightgray",
+                cursor: "pointer",
+              },
+            }}
+            key={index}
+            onClick={() => openModal(row.id)}
+          >
+            <StyledTableCell
+              align="center"
+              style={{ borderRight: "0.5px solid rgb(0, 0, 0, 0.3)" }}
+            >
+              {row.id}
+            </StyledTableCell>
+            <StyledTableCell align="left" component="th" scope="row">
+              {row.name}
+            </StyledTableCell>
+            <StyledTableCell align="center">{row.status}</StyledTableCell>
+          </StyledTableRow>
+        ))}
+      </TableBody>
+      <BasicModal data={selectedHero} open={open} setOpen={setOpen} />
+    </>
+  );
+};
+
+const HeroTable = () => {
+  const [page, setPage] = React.useState(0);
+  const rowsPerPage = 20;
+
+  const dispatch = useDispatch();
+  const { listOfСharacter, infoPage, isLoading } = useSelector(
+    (state) => state.heroes
+  );
+
+  React.useEffect(() => {
+    const offset = page * rowsPerPage;
+    dispatch(fetchHeroes(offset / rowsPerPage + 1));
+  }, [dispatch, page]);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+
+  if (isLoading && listOfСharacter.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -106,72 +139,51 @@ const HeroTable = () => {
         >
           <CircularProgress color="inherit" />
         </Box>
-      ) : (
-        <TableContainer
-          sx={{
-            background: "transparent",
-            mt: 3,
-            boxShadow: "none",
-            maxHeight: 700,
-            maxWidth: 555,
-          }}
-          component={Paper}
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
+      <TableContainer
+        sx={{
+          background: "transparent",
+          mt: 3,
+          boxShadow: "none",
+          maxHeight: 700,
+          maxWidth: 555,
+        }}
+        component={Paper}
+      >
+        <Table
+          sx={{ overflowY: "scroll", maxWidth: 555 }}
+          aria-label="customized table"
         >
-          <Table
-            sx={{ overflowY: "scroll", maxWidth: 555 }}
-            aria-label="customized table"
-          >
-            <TableHead sx={{ position: "sticky", top: 0 }}>
-              <TableRow>
-                <StyledTableCell style={{ width: "24px" }} align="center">
-                  ID
-                </StyledTableCell>
-                <StyledTableCell align="left">Name</StyledTableCell>
-                <StyledTableCell style={{ width: "75px" }} align="center">
-                  Status
-                </StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {listOfСharacter.length > 0 ? (
-                listOfСharacter.map((row, index) => (
-                  <StyledTableRow
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "lightgray",
-                        cursor: "pointer",
-                      },
-                    }}
-                    key={index}
-                    onClick={() => {
-                      openModal(row.id);
-                    }}
-                  >
-                    <StyledTableCell
-                      align="center"
-                      style={{ borderRight: "0.5px solid rgb(0, 0, 0, 0.3)" }}
-                    >
-                      {row.id}
-                    </StyledTableCell>
-                    <StyledTableCell align="left" component="th" scope="row">
-                      {row.name}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.status}
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))
-              ) : (
-                <>
-                  {[...Array(rowsPerPage)].map((_, index) => (
-                    <SkeletonTableRow key={index} />
-                  ))}
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+          <TableHead sx={{ position: "sticky", top: 0 }}>
+            <TableRow>
+              <StyledTableCell style={{ width: "24px" }} align="center">
+                ID
+              </StyledTableCell>
+              <StyledTableCell align="left">Name</StyledTableCell>
+              <StyledTableCell style={{ width: "75px" }} align="center">
+                Status
+              </StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <HeroTableBody
+            isLoading={isLoading}
+            listOfСharacter={listOfСharacter}
+            rowsPerPage={rowsPerPage}
+          />
+        </Table>
+      </TableContainer>
       <Box
         sx={{
           display: "flex",
@@ -189,7 +201,6 @@ const HeroTable = () => {
           labelRowsPerPage=""
         />
       </Box>
-      <BasicModal data={selectedHero} open={open} setOpen={setOpen} />
     </Box>
   );
 };

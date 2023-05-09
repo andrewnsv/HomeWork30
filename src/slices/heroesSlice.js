@@ -6,6 +6,7 @@ export const fetchHeroes = createAsyncThunk(
   async (page) => {
     try {
       const data = await axios.get(`https://rickandmortyapi.com/api/character?page=${page}`);
+      await new Promise(r => setTimeout(r, 1500));
       return data.data;
     } catch (error) {
       return error.message
@@ -20,21 +21,21 @@ export const heroesSlice = createSlice({
     listOfСharacter: [],
     infoPage: "null",
     hero: null,
-    status: null,
+    isLoading: false,
     error: null,
   },
 
   extraReducers: {
     [fetchHeroes.pending]: (state, action) => {
-      state.status = "loading";
+      state.isLoading = true;
     },
     [fetchHeroes.fulfilled]: (state, action) => {
-      state.status = "resolved";
+      state.isLoading = false;
       state.listOfСharacter = action.payload.results;
       state.infoPage = action.payload.info;
     },
     [fetchHeroes.rejected]: (state, action) => {
-      state.status = "rejected";
+      state.isLoading = false;
       state.error = action.payload;
     },
   },
