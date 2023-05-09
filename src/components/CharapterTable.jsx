@@ -49,7 +49,6 @@ const HeroTable = () => {
     (state) => state.heroes
   );
 
-  //Загрузка данных
   React.useEffect(() => {
     const offset = page * rowsPerPage;
     const timer = setTimeout(() => {
@@ -59,21 +58,18 @@ const HeroTable = () => {
     return () => {
       clearTimeout(timer);
     };
-  }, [dispatch, page, status]);
+  }, [dispatch, page]);
 
-  //Переключатель страниц
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  //Открытие модального окна
   const openModal = (id) => {
     const hero = listOfСharacter.find((hero) => hero.id === id);
     setSelectedHero(hero);
     setOpen(true);
   };
 
-  //Скелетон таблицы (Нужно перенести в отдельный компонент)
   const SkeletonTableRow = () => {
     return (
       <StyledTableRow>
@@ -105,7 +101,7 @@ const HeroTable = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "100vh",
+            height: "77vh",
           }}
         >
           <CircularProgress color="inherit" />
@@ -137,13 +133,7 @@ const HeroTable = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {listOfСharacter.length > 0 && status === "loading" ? (
-                <>
-                  {[...Array(rowsPerPage)].map((_, index) => (
-                    <SkeletonTableRow key={index} />
-                  ))}
-                </>
-              ) : (
+              {listOfСharacter.length > 0 ? (
                 listOfСharacter.map((row, index) => (
                   <StyledTableRow
                     sx={{
@@ -171,6 +161,12 @@ const HeroTable = () => {
                     </StyledTableCell>
                   </StyledTableRow>
                 ))
+              ) : (
+                <>
+                  {[...Array(rowsPerPage)].map((_, index) => (
+                    <SkeletonTableRow key={index} />
+                  ))}
+                </>
               )}
             </TableBody>
           </Table>
